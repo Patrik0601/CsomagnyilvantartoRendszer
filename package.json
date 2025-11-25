@@ -1,0 +1,32 @@
+{
+  "name": "csomagnyilvantartorendszer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "types": "module",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Patrik0601/CsomagnyilvantartoRendszer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Patrik0601/CsomagnyilvantartoRendszer/issues"
+  },
+  "homepage": "https://github.com/Patrik0601/CsomagnyilvantartoRendszer#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^12.4.6",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
