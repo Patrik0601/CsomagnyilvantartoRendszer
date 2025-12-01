@@ -3,7 +3,7 @@ import db from "./db.js";
 db.prepare(`CREATE TABLE IF NOT EXISTS packages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     userId INTEGER,
-    tracking_number INTEGER UNIQUE AUTOINCREMENT,
+    tracking_number INTEGER UNIQUE,
     sender_name TEXT,
     sender_adress TEXT,
     recipient_name TEXT,
@@ -13,8 +13,8 @@ db.prepare(`CREATE TABLE IF NOT EXISTS packages (
     status TEXT,
     status_history TEXT,
     created_at DATETIME,
-    updated_at DATETIME
-    FOREIGN KEY (userId) REFERENCE users(id)
+    updated_at DATETIME,
+    FOREIGN KEY (userId) REFERENCES users(id)
 )`).run();
 
 export const getPackageByUserID = (userId) => 

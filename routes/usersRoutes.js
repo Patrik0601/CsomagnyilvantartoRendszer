@@ -1,0 +1,89 @@
+import express from "express"
+import * as Users from "../data/users.js"
+import bcrypt, { hash } from "bcrypt"
+import jwt from "jsonwebtoken"
+
+const router = express.Router()
+
+router.get("/", (req, res) => {
+    const users = Users.getUsers()
+    res.json(users)
+})
+
+
+router.post("/register", (req, res) => {
+    const {name, email, password} = req.body
+    if(!name || !email || !password){
+        return res.status(400).json({message: "Missing required data"});
+    }
+    let user = Users.getUserByEmail(email)
+    if (user){
+        return res.status(400).json({message: "User not found"})
+    }
+    const salt = bcrypt.genSaltSync(12)
+    const hashedPassword = bcrypt.hashSync(password, salt)
+    const saved = Users.saveUser(name, email, hashedPassword)
+    user = Users.getUserById(saved.lastInsertRowid)
+    delete user.password
+    res.status(201).json(user)
+})
+
+router.post("/login", (req, res) => {
+     const {email, password} = req.body
+    if(!email || !password){
+        return res.status(400).json({message: "Missing required data"});
+    }
+    let user = Users.getUserByEmail(email)
+    if (user){
+        return res.status(400).json({message: "Invalid credentials"})
+    }
+    if(!bcrypt.compareSync(password, user.password)){
+        return res.status(400).json({message: "Invalid credentials"})
+    }
+    const token = jwt.sign({id: user.id, email: user.email}, "secret_key",{expiresIn: "60s"});
+    res.status(201).json(token)
+})
+
+router.patch("/:id", auth, (req, res) => {
+    const id = +req.userId
+    const {name, email, password} = req.body
+    let hashedPassword;
+    if(password){
+        const salt = bcrypt.genSaltSync(12)
+        hashedPassword = bcrypt.hashSync(password, salt)
+    }
+    let user = Users.getUserById(id)
+    Users.updateUser(
+        id, 
+        name || user.name, 
+        email || user.email, 
+        hashedPassword || user.password)
+    user = Users.getUserById(saved.lastInsertRowid)
+    delete user.password
+    res.status(200).json(user)
+})
+
+router.get("/me", auth, (req, res) => {
+    const user = Users.getUserById(+req.userId)
+    delete user.password
+    res.json(user)
+})
+
+function auth(req, res, next){
+    try{
+        const accessToken = req.headers.authorization
+        if(!accessToken){
+            return res.status(401).json({message: "Unauthorized"});
+        }
+        const token = accessToken.split(' ')[1];
+        const data = jwt.verify(token, "secret_key");
+        req.userId = data.id;
+        req.userEmail = data.email;
+        next();
+    }catch(err){
+        res.status(500).json({error: err});
+    }
+}
+
+export default router;
+export {auth} 
