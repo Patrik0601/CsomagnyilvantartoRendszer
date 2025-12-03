@@ -5,12 +5,6 @@ import jwt from "jsonwebtoken"
 
 const router = express.Router()
 
-router.get("/", (req, res) => {
-    const users = Users.getUsers()
-    res.json(users)
-})
-
-
 router.post("/register", (req, res) => {
     const {name, email, password} = req.body
     if(!name || !email || !password){
@@ -42,31 +36,6 @@ router.post("/login", (req, res) => {
     }
     const token = jwt.sign({id: user.id, email: user.email}, "secret_key",{expiresIn: "60s"});
     res.status(201).json(token)
-})
-
-router.patch("/:id", auth, (req, res) => {
-    const id = +req.userId
-    const {name, email, password} = req.body
-    let hashedPassword;
-    if(password){
-        const salt = bcrypt.genSaltSync(12)
-        hashedPassword = bcrypt.hashSync(password, salt)
-    }
-    let user = Users.getUserById(id)
-    Users.updateUser(
-        id, 
-        name || user.name, 
-        email || user.email, 
-        hashedPassword || user.password)
-    user = Users.getUserById(saved.lastInsertRowid)
-    delete user.password
-    res.status(200).json(user)
-})
-
-router.get("/me", auth, (req, res) => {
-    const user = Users.getUserById(+req.userId)
-    delete user.password
-    res.json(user)
 })
 
 function auth(req, res, next){

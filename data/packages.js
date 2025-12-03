@@ -9,13 +9,15 @@ db.prepare(`CREATE TABLE IF NOT EXISTS packages (
     recipient_name TEXT,
     recipient_address TEXT,
     content TEXT,
-    weight INTEGER,
+    weight TEXT,
     status TEXT,
     status_history TEXT,
     created_at DATETIME,
     updated_at DATETIME,
     FOREIGN KEY (userId) REFERENCES users(id)
 )`).run();
+
+export const getPackages = () => db.prepare("SELECT * FROM packages").all();
 
 export const getPackageByUserID = (userId) => 
     db.prepare("SELECT * FROM packages WHERE userId = ?").get(userId);
