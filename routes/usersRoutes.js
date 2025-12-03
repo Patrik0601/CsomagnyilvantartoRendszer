@@ -6,36 +6,37 @@ import jwt from "jsonwebtoken"
 const router = express.Router()
 
 router.post("/register", (req, res) => {
-    const {name, email, password} = req.body
-    if(!name || !email || !password){
-        return res.status(400).json({message: "Missing required data"});
-    }
-    let user = Users.getUserByEmail(email)
-    if (user){
-        return res.status(400).json({message: "User not found"})
-    }
-    const salt = bcrypt.genSaltSync(12)
-    const hashedPassword = bcrypt.hashSync(password, salt)
-    const saved = Users.saveUser(name, email, hashedPassword)
-    user = Users.getUserById(saved.lastInsertRowid)
-    delete user.password
-    res.status(201).json(user)
-})
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password)
+        return res.status(400).json({ message: "Missing required data" });
+
+    if (Users.getUserByEmail(email))
+        return res.status(400).json({ message: "Email already registered" });
+
+    const hash = bcrypt.hashSync(password, 12);
+    const saved = Users.saveUser(name, email, hash);
+
+    const user = Users.getUserById(saved.lastInsertRowid);
+    delete user.password;
+
+    res.status(201).json(user);
+});
 
 router.post("/login", (req, res) => {
-     const {email, password} = req.body
+    const {email, password} = req.body
     if(!email || !password){
         return res.status(400).json({message: "Missing required data"});
     }
     let user = Users.getUserByEmail(email)
-    if (user){
+    if (!user){
         return res.status(400).json({message: "Invalid credentials"})
     }
     if(!bcrypt.compareSync(password, user.password)){
         return res.status(400).json({message: "Invalid credentials"})
     }
     const token = jwt.sign({id: user.id, email: user.email}, "secret_key",{expiresIn: "60s"});
-    res.status(201).json(token)
+    res.json({ token })
 })
 
 function auth(req, res, next){
@@ -50,7 +51,7 @@ function auth(req, res, next){
         req.userEmail = data.email;
         next();
     }catch(err){
-        res.status(500).json({error: err});
+        res.status(401).json({message: "Invalid or expired token"});
     }
 }
 

@@ -2,6 +2,7 @@ import db from './db.js'
 
 db.prepare(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE
     email TEXT UNIQUE,
     password_hash TEXT
 )`).run();

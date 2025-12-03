@@ -8,8 +8,8 @@ const app  = express()
 app.use(express.json())
 app.use(express.static("public"))
 
-app.use("/packages", packagesRoutes)
-app.use("/user", userRoutes)
+app.use("/api/packages", packagesRoutes)
+app.use("/api", userRoutes)
 
 app.listen(PORT, () => {
     console.log(`Server runs on ${PORT}`)
