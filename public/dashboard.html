@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="hu">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="css/style.css">
+    <title>Dashboard - Csomagok</title>
+</head>
+<body>
+    <header class="topbar">
+        <h1>Csomagjaim</h1>
+        <nav>
+            <a href="new-package.html">Új csomag</a>
+            <a href="track.html">Nyomkövetés</a>
+            <button id="logoutBtn">Kijelentkezés</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section id="list"></section>
+    </main>
+
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        if(!getToken()){ location.href='login.html'; }
+        document.getElementById('logoutBtn').addEventListener('click', ()=>{ removeToken(); location.href='login.html'; });
+
+        async function load(){
+            try{
+                const pkgs = await apiRequest('GET','/api/packages');
+                const list = document.getElementById('list');
+                if(!Array.isArray(pkgs)){
+                    list.innerHTML = '<p>Nem található csomag vagy hiba történt.</p>';
+                    return;
+                }
+                if(pkgs.length === 0) { list.innerHTML = '<p>Nincsenek csomagjaid.</p>'; return; }
+
+                const html = pkgs.map(p => `
+                    <article class="card">
+                        <h3>Nyomkövető: <strong>${p.tracking_number}</strong></h3>
+                        <p><strong>Státusz:</strong> ${p.status}</p>
+                        <p><strong>Feladó:</strong> ${p.sender_name}</p>
+                        <p><strong>Címzett:</strong> ${p.recipient_name}</p>
+                        <a class="btn" href="package-details.html?id=${p.id}">Részletek</a>
+                    </article>
+                `).join('');
+
+
+                list.innerHTML = html;
+            } 
+            catch(err){ 
+                document.getElementById('list').innerHTML = `<p class="error">${err.message||err}</p>`
+            }
+        }
+        load();
+    </script>
+</body>
+</html>

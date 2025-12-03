@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="css/style.css" />
+    <title>Csomag részletek</title>
+  </head>
+  <body>
+    <main class="container">
+      <a href="dashboard.html">← vissza</a>
+      <section id="details"></section>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+      if (!getToken()) {
+        location.href = "login.html";
+      }
+      const urlParams = new URLSearchParams(location.search);
+      const id = urlParams.get("id");
+      if (!id) {
+        document.getElementById("details").innerHTML = "<p>Hibás ID</p>";
+      }
+
+      async function load() {
+        try {
+          const pkg = await apiRequest("GET", "/api/packages/" + id);
+          const hist = pkg.status_history ? JSON.parse(pkg.status_history) : [];
+          document.getElementById("details").innerHTML = `
+            <h1>Nyomkövető: ${pkg.tracking_number}</h1>
+            <p><strong>Státusz:</strong> ${pkg.status}</p>
+            <p><strong>Feladó:</strong> ${pkg.sender_name} — ${pkg.sender_address}</p>
+            <p><strong>Címzett:</strong> ${pkg.recipient_name} — ${pkg.recipient_address}</p>
+            <p><strong>Tartalom:</strong> ${pkg.content}</p>
+            <p><strong>Súly:</strong> ${pkg.weight} kg</p>
+            <h3>Státusztörténet</h3>
+            ${hist.length === 0 ? "<p>Nincs előzmény</p>" : "<ol>" + hist.map((h) => `<li>${h.time} — ${h.status}</li>`).join("") + "</ol>"}
+            `;
+        } catch (err) {document.getElementById("details").innerHTML = `<p class="error">${err.message || err}</p>`;
+        }
+      }
+      load();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="css/style.css" />
+    <title>Nyomkövetés</title>
+  </head>
+  <body>
+    <main class="container">
+      <h1>Csomag nyomkövetése</h1>
+      <form id="trackForm">
+        <label>Nyomkövető szám <input name="tn" required /></label>
+        <button type="submit">Keres</button>
+      </form>
+      <section id="res"></section>
+      <p><a href="dashboard.html">Vissza</a></p>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script>
+      document
+        .getElementById("trackForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const tn = e.target.tn.value.trim();
+          try {
+            const pkg = await apiRequest("GET", "/api/packages/tracking/" + encodeURIComponent(tn), null, false);
+            const hist = pkg.status_history
+              ? JSON.parse(pkg.status_history)
+              : [];
+            document.getElementById("res").innerHTML = `
+                <h2>Státusz: ${pkg.status}</h2>
+                <p>Feladó: ${pkg.sender_name}</p>
+                <p>Címzett: ${pkg.recipient_name}</p>
+                <h3>Előzmények</h3> 
+                ${hist.length === 0 ? "<p>Nincs előzmény</p>" : "<ol>" + hist.map((h) => `<li>${h.time} — ${h.status}</li>`).join("") + "</ol>"}
+            `;
+          } catch (err) {
+            document.getElementById("res").innerHTML = `<p class="error">${
+              err.message || err
+            }</p>`;
+          }
+        });
+    </script>
+  </body>
+</html>

@@ -1,11 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="hu">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="css/style.css">
+    <title>Regisztráció</title>
 </head>
 <body>
-    
+    <main class="container">
+        <h1>Regisztráció</h1>
+        <form id="regForm">
+            <label>Név <input type="text" name="username" required></label>
+            <label>Email <input type="email" name="email" required></label>
+            <label>Jelszó <input type="password" name="password" required></label>
+            <button type="submit">Regisztrálok</button>
+        </form>
+        <p>Van már fiókod? <a href="login.html">Bejelentkezés</a></p>
+        <div id="msg" class="msg"></div>
+    </main>
+
+
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('regForm').addEventListener('submit', async (e)=>{
+            e.preventDefault();
+            const f = e.target;
+            const body = { name: f.name.value, email: f.email.value, password: f.password.value };
+            try{
+                const res = await apiRequest('POST','/api/register', body, false);
+                if(res.id || res.message === undefined){
+                    alert('Regisztráció sikeres — jelentkezz be');
+                    location.href = 'login.html';
+                } else {
+                    showMsg(JSON.stringify(res));
+                }
+            }catch(err){ showMsg(err.message || err); }
+        })
+    </script>
 </body>
 </html>
