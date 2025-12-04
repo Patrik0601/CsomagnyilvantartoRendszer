@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="style.css" />
     <title>Új csomag feladása</title>
   </head>
   <body>
@@ -15,15 +15,15 @@
         <label>Címzett neve <input type="text" name="recipient_name" required></label>
         <label>Címzett címe <input type="text" name="recipient_address" required></label>
         <label>Tartalom <input type="text" name="content" required /></label>
-        <label>Súly (kg) <input type="number" step="0.01" name="weight" required></label>
+        <label>Súly (kg) <input type="number" step="0.01" name="weight" min="0.01" required></label>
         <button type="submit">Feladás</button>
       </form>
       <div id="msg" class="msg"></div>
       <p><a href="dashboard.html">Vissza a listához</a></p>
     </main>
 
-    <script src="js/api.js"></script>
-    <script src="js/auth.js"></script>
+    <script src="api.js"></script>
+    <script src="auth.js"></script>
     <script>
       if (!getToken()) {
         location.href = "login.html";

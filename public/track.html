@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="style.css" />
     <title>Nyomkövetés</title>
   </head>
   <body>
@@ -17,30 +17,106 @@
       <p><a href="dashboard.html">Vissza</a></p>
     </main>
 
-    <script src="js/api.js"></script>
+    <script src="api.js"></script>
     <script>
+      function renderStatusHistory(hist) {
+        if (hist.length === 0) {
+          return "<p>Nincs előzmény</p>";
+        }
+        return "<ol>" + hist.map((h) => `<li>${h.timestamp} — ${h.status}</li>`).join("") + "</ol>";
+      }
+
+      const STATUS_OPTIONS = [
+        "Waiting for pickup",
+        "In Transit",
+        "Delivered"
+      ];
+
+      async function fetchAndRenderPackageDetails(trackingNumber, successMessage = '') {
+        const resDiv = document.getElementById("res");
+        resDiv.innerHTML = '';
+
+        try {
+          const pkg = await apiRequest("GET", "/api/packages/tracking/" + encodeURIComponent(trackingNumber), null, false);
+          const hist = pkg.status_history ? JSON.parse(pkg.status_history) : [];
+          
+          let resHtml = `
+              <h2>Státusz: ${pkg.status}</h2>
+              <p>Nyomkövető szám: ${pkg.tracking_number}</p>
+              <p>Feladó: ${pkg.sender_name}</p>
+              <p>Címzett: ${pkg.recipient_name}</p>
+              <h3>Előzmények</h3>
+              ${renderStatusHistory(hist)}
+          `;
+          
+          if (successMessage) {
+            resHtml += `<div class="msg">${successMessage}</div>`;
+          }
+
+          const userRole = window.getUserRoleFromToken();
+          if (userRole === 'admin') {
+              const currentStatusIndex = STATUS_OPTIONS.indexOf(pkg.status);
+
+              if (currentStatusIndex < STATUS_OPTIONS.length - 1) {
+                  const nextStatuses = STATUS_OPTIONS.slice(currentStatusIndex + 1);
+                  resHtml += `
+                      <h3>Státusz módosítása</h3>
+                      <form id="statusUpdateForm" data-package-id="${pkg.id}" data-tracking-number="${pkg.tracking_number}">
+                          <label>
+                              Új státusz:
+                              <select name="newStatus">
+                                  <option value="" selected disabled>Válasszon státuszt</option> <!-- Default option -->
+                                  ${nextStatuses.map(status => `<option value="${status}">${status}</option>`).join('')}
+                              </select>
+                          </label>
+                          <button type="submit" class="button">Státusz frissítése</button>
+                          <div id="statusUpdateMsg" class="msg"></div>
+                      </form>
+                  `;
+              } else {
+                  resHtml += `<p>A csomag már kézbesítve van, státusza nem módosítható.</p>`;
+              }
+          }
+          
+          resDiv.innerHTML = resHtml;
+
+          const statusUpdateForm = document.getElementById("statusUpdateForm");
+          if (statusUpdateForm) {
+              statusUpdateForm.addEventListener("submit", async (event) => {
+                  event.preventDefault();
+                  const packageId = statusUpdateForm.dataset.packageId;
+                  const newStatus = event.target.newStatus.value;
+                  const statusUpdateMsg = document.getElementById("statusUpdateMsg");
+
+                  if (!newStatus) {
+                      statusUpdateMsg.className = 'msg error';
+                      statusUpdateMsg.textContent = 'Kérjük, válasszon új státuszt.';
+                      return;
+                  }
+
+                  try {
+                      const updatedPkg = await apiRequest("PUT", "/api/packages/" + packageId, { status: newStatus }, true);
+                      await fetchAndRenderPackageDetails(trackingNumber, `Státusz sikeresen frissítve: ${updatedPkg.status}`);
+                  } catch (err) {
+                      statusUpdateMsg.className = 'msg error';
+                      statusUpdateMsg.textContent = err.message || err;
+                  }
+              });
+          }
+
+        } catch (err) {
+          resDiv.innerHTML = `<p class="msg error">${
+            err.message || err
+          }</p>`;
+        }
+      }
+
       document
         .getElementById("trackForm")
-        .addEventListener("submit", async (e) => {
+        .addEventListener("submit", (e) => {
           e.preventDefault();
           const tn = e.target.tn.value.trim();
-          try {
-            const pkg = await apiRequest("GET", "/api/packages/tracking/" + encodeURIComponent(tn), null, false);
-            const hist = pkg.status_history
-              ? JSON.parse(pkg.status_history)
-              : [];
-            document.getElementById("res").innerHTML = `
-                <h2>Státusz: ${pkg.status}</h2>
-                <p>Feladó: ${pkg.sender_name}</p>
-                <p>Címzett: ${pkg.recipient_name}</p>
-                <h3>Előzmények</h3> 
-                ${hist.length === 0 ? "<p>Nincs előzmény</p>" : "<ol>" + hist.map((h) => `<li>${h.time} — ${h.status}</li>`).join("") + "</ol>"}
-            `;
-          } catch (err) {
-            document.getElementById("res").innerHTML = `<p class="error">${
-              err.message || err
-            }</p>`;
-          }
+          fetchAndRenderPackageDetails(tn); 
         });
     </script>
   </body>
