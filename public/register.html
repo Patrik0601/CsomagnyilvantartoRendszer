@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="style.css">
     <title>Regisztráció</title>
 </head>
 <body>
@@ -20,14 +20,14 @@
     </main>
 
 
-    <script src="js/api.js"></script>
+    <script src="api.js"></script>
     <script>
         document.getElementById('regForm').addEventListener('submit', async (e)=>{
             e.preventDefault();
             const f = e.target;
-            const body = { name: f.name.value, email: f.email.value, password: f.password.value };
+            const body = { name: f.username.value, email: f.email.value, password: f.password.value };
             try{
-                const res = await apiRequest('POST','/api/register', body, false);
+                const res = await apiRequest('POST','/user/register', body, false);
                 if(res.id || res.message === undefined){
                     alert('Regisztráció sikeres — jelentkezz be');
                     location.href = 'login.html';
